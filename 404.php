@@ -14,8 +14,8 @@ get_header();
 
     <section class="error-404 not-found">
       <header>
-        <h1><?= __('404 Not Found', '_s'); ?></h1>
-        <p><a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?= __('Return to the home page', '_s'); ?></a></p>
+        <h1><?php esc_html_e( '404 Not Found', '_s' ); ?></h1>
+        <p><a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Return to the home page', '_s' ); ?></a></p>
       </header>
     </section>
 

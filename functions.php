@@ -30,18 +30,19 @@ endif;
 add_action('after_setup_theme', '_s_setup');
 
 
-/** 
- * Remove extra image sizes
+/**
+ * Remove extra image sizes (only affects custom sizes; core sizes are unchanged).
  */
-function remove_extra_image_sizes()
+function _s_remove_extra_image_sizes()
 {
+	$keep = array('thumbnail', 'medium', 'large', '2048x2048');
 	foreach (get_intermediate_image_sizes() as $size) {
-		if (!in_array($size, array('thumbnail', 'medium', 'large', '2048x2048'))) {
+		if (!in_array($size, $keep, true)) {
 			remove_image_size($size);
 		}
 	}
 }
-add_action('init', 'remove_extra_image_sizes');
+add_action('init', '_s_remove_extra_image_sizes');
 
 
 /**
@@ -49,39 +50,65 @@ add_action('init', 'remove_extra_image_sizes');
  */
 function _s_scripts()
 {
-	wp_enqueue_style('_s-screen', get_template_directory_uri() . '/styles/screen.css', array(), filemtime(get_template_directory() . '/styles/screen.css'));
+	$template_dir     = get_template_directory();
+	$template_dir_uri = get_template_directory_uri();
+
 	wp_enqueue_style('_s-style', get_stylesheet_uri(), array(), _S_VERSION);
 
-	wp_enqueue_script('_s-scripts', get_template_directory_uri() . '/js/scripts.js', array('jquery'), filemtime(get_template_directory() . '/js/scripts.js'), true);
-	wp_enqueue_script('_s-custom', get_template_directory_uri() . '/js/custom.js', array('jquery'), filemtime(get_template_directory() . '/js/custom.js'), true);
-	wp_enqueue_script('_s-navigation', get_template_directory_uri() . '/js/navigation.js', array(), filemtime(get_template_directory() . '/js/navigation.js'), true);
+	$screen_css = $template_dir . '/styles/screen.css';
+	if (file_exists($screen_css)) {
+		wp_enqueue_style('_s-screen', $template_dir_uri . '/styles/screen.css', array(), filemtime($screen_css));
+	}
 
-	$phpVars = array(
-		'template_directory' => get_template_directory_uri(),
-		'ajax_url' => admin_url("admin-ajax.php"),
-		'ajax_nonce' => wp_create_nonce("ajax_nonce"),
-		'scripts_async_version' => filemtime(get_template_directory() . '/js/scripts-async.js'),
-		'custom_async_version' => filemtime(get_template_directory() . '/js/custom-async.js'),
-		'version' => _S_VERSION
+	$scripts_js = $template_dir . '/js/scripts.js';
+	if (file_exists($scripts_js)) {
+		wp_enqueue_script('_s-scripts', $template_dir_uri . '/js/scripts.js', array('jquery'), filemtime($scripts_js), true);
+	}
+
+	$custom_js = $template_dir . '/js/custom.js';
+	if (file_exists($custom_js)) {
+		wp_enqueue_script('_s-custom', $template_dir_uri . '/js/custom.js', array('jquery'), filemtime($custom_js), true);
+	}
+
+	$navigation_js = $template_dir . '/js/navigation.js';
+	wp_enqueue_script('_s-navigation', $template_dir_uri . '/js/navigation.js', array(), file_exists($navigation_js) ? filemtime($navigation_js) : _S_VERSION, true);
+
+	$php_vars = array(
+		'template_directory' => $template_dir_uri,
+		'ajax_url'           => admin_url('admin-ajax.php'),
+		'ajax_nonce'         => wp_create_nonce('ajax_nonce'),
+		'version'            => _S_VERSION,
 	);
-	wp_localize_script('_s-custom', 'php_vars', $phpVars);
+	$scripts_async = $template_dir . '/js/scripts-async.js';
+	$custom_async  = $template_dir . '/js/custom-async.js';
+	if (file_exists($scripts_async)) {
+		$php_vars['scripts_async_version'] = filemtime($scripts_async);
+	}
+	if (file_exists($custom_async)) {
+		$php_vars['custom_async_version'] = filemtime($custom_async);
+	}
+	// Localize on navigation so php_vars is always available even without custom.js.
+	wp_localize_script('_s-navigation', 'php_vars', $php_vars);
 }
 add_action('wp_enqueue_scripts', '_s_scripts');
 
 
-// lean_s custom enhancements
-require get_template_directory() . '/inc/enhancements.php';
+// lean_s custom enhancements (optional)
+$enhancements = get_template_directory() . '/inc/enhancements.php';
+if (file_exists($enhancements)) {
+	require $enhancements;
+}
 
 // Functions which enhance the theme by hooking into WordPress.
 require get_template_directory() . '/inc/template-functions.php';
 
-// Customizer additions.
+// Theme Customizer.
 require get_template_directory() . '/inc/customizer.php';
 
-// Customizer additions.
+// Admin-only tweaks (optional).
 require get_template_directory() . '/inc/admin.php';
 
-// Customizer additions.
+// ACF options and helpers (optional; requires ACF plugin).
 require get_template_directory() . '/inc/acf.php';
 
 // Load WooCommerce compatibility file.

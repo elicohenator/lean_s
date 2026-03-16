@@ -1,0 +1,71 @@
+---
+description: General rules for custom WordPress theme development (security, escaping, robustness)
+globs: **/*.php, **/themes/**/*.js
+alwaysApply: false
+---
+
+# Custom WordPress Theme Development
+
+Apply these practices when building or editing custom WordPress themes.
+
+## 1. Output escaping (security & XSS)
+
+- **Always escape dynamic output** before echoing in templates and callbacks:
+  - **HTML text**: `esc_html()` for plain text (titles, names, captions).
+  - **URLs** (links, images, iframes): `esc_url()`.
+  - **HTML attributes**: `esc_attr()` for attribute values.
+- **ACF / get_field()**: Never output raw. Use `esc_html()`, `esc_url()`, or `wp_kses_post()` if the field may contain allowed HTML.
+- **Links from ACF link fields**: Escape `url` with `esc_url()`, `title` with `esc_html()`, `target` with `esc_attr()`.
+- **Options / translatable strings**: Escape when outputting (e.g. footer contact, credits). Use `wp_kses_post()` if the option allows HTML.
+
+## 2. Avoiding undefined array/key notices (PHP 8+)
+
+- **ACF and `get_fields()` / `get_field()`**: Keys may be missing. Before using `$fields['key']`:
+  - Prefer `!empty($fields['key'])` for conditionals (does not trigger notices).
+  - Use null coalescing when outputting: `$fields['key'] ?? ''` or `$item['key'] ?? null`.
+- **Loops over repeater/flexible content**: Ensure the loop variable has the expected keys; use `??` for optional sub-keys (e.g. `$item['image']['sizes']['large'] ?? $item['image']['url'] ?? ''`).
+- **Template parts**: If a variable is passed from a parent (e.g. `uniqueId`, `post`), ensure the parent always sets it (e.g. define a fallback when a conditional branch doesn’t set it).
+
+## 3. AJAX and forms (security)
+
+- **Nonces**: For all custom AJAX actions and admin GET/POST actions (e.g. “sync” links), verify the nonce before doing anything:
+  - Create: `wp_create_nonce('action_name')` (e.g. in link URL or `wp_localize_script`).
+  - Verify: `wp_verify_nonce($_POST['nonce'] ?? '', 'action_name')` (or `$_GET` for GET actions). Abort and return a safe response if verification fails.
+- **Input**: Sanitize and validate:
+  - `sanitize_text_field(wp_unslash($_POST['key'] ?? ''))` for text.
+  - Restrict enums (e.g. language) with `in_array($value, ['he', 'en'], true)`.
+  - `intval()` or `absint()` for IDs and page numbers.
+- **Response**: Prefer `wp_send_json()` / `wp_send_json_success()` / `wp_send_json_error()` and avoid extra output after.
+
+## 4. Database and queries
+
+- **Custom SQL**: Use `$wpdb->prepare()` with placeholders (`%s`, `%d`). Never concatenate unsanitized input into SQL.
+- **LIKE patterns**: Use `$wpdb->esc_like($value)` for the value, then pass the full pattern (e.g. `$wpdb->esc_like($value) . '%'`) as a single placeholder in `prepare()`.
+- **Global**: Use `global $wpdb` before using `$wpdb` in templates or helper functions.
+
+## 5. Theme structure and paths
+
+- **Script/style versioning**: Use `filemtime(get_template_directory() . '/path/to/file')` (or `get_stylesheet_directory()` for child themes) so cache busting is consistent. Prefer `get_template_directory()` for parent theme assets.
+- **Enqueue**: Use `get_template_directory_uri()` for theme asset URLs. Localize script data with `wp_localize_script()` for AJAX URL and nonces.
+
+## 6. Front-end (JS) and debug output
+
+- **Console**: Remove or comment out `console.log` (and similar) before production so the console stays clean and no internal data is exposed.
+- **Errors**: Avoid dumping raw PHP errors or debug output into the page; fix the cause and use proper escaping/logging.
+
+## 7. Admin UI (list tables, notices)
+
+- **Custom column output**: Escape all text with `esc_html()` and all URLs (e.g. thumbnail `src`) with `esc_url()`. Add `alt=""` on admin images where appropriate.
+- **Admin notices**: Sanitize query args (e.g. `sanitize_key($_GET['message'])`) and escape notice text with `esc_html()` or `esc_html__()`.
+
+## 8. Reusable helpers
+
+- **Link/HTML helpers**: If a function returns HTML (e.g. a link), escape every dynamic part inside the function (URL, title, attributes) so callers can output it without escaping again.
+- **Functions that return “content”**: Either escape inside the function and document that the return value is safe HTML, or document that the caller must escape (and prefer escaping inside the helper for consistency).
+
+## 9. Optional / missing content
+
+- **Conditionals**: Use `isset()` and `!empty()` so missing ACF fields or empty arrays don’t trigger notices. Use `??` when you need a default for output.
+- **Empty state**: When a query or `get_posts()` might return nothing, check for null/empty before using `->posts` or looping, and avoid passing undefined variables to template parts.
+
+Apply these rules when editing theme PHP (templates, `functions.php`, `inc/*`, template-parts, page-templates) and when adding or changing theme JavaScript that touches the DOM or AJAX.

@@ -36,7 +36,7 @@ get_header();
 
 		else :
 
-			echo 'No Content Found';
+			echo '<p>' . esc_html__( 'No content found.', '_s' ) . '</p>';
 
 		endif;
 		?>

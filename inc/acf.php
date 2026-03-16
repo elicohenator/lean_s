@@ -23,22 +23,24 @@ function my_acf_op_init()
  * Links
  */
 
-// Print ACF Links
+// Print ACF Links (escaped for safe output)
 function printLink($link, $class = '')
 {
-  if ($link) :
-    $link_target = $link['target'] ? $link['target'] : '_self';
-    $class = ($class != '') ? 'class="' . $class . '"' : '';
-    return '<a href="' . $link['url'] . '" ' . $class . ' target="' . $link_target . '">' . $link['title'] . '</a>';
-  endif;
+  if (empty($link['url'])) {
+    return '';
+  }
+  $link_target = !empty($link['target']) ? $link['target'] : '_self';
+  $attr_class  = ($class !== '') ? ' class="' . esc_attr($class) . '"' : '';
+  return '<a href="' . esc_url($link['url']) . '"' . $attr_class . ' target="' . esc_attr($link_target) . '">' . esc_html($link['title']) . '</a>';
 }
 
-// Print Social Links
+// Print Social Links (escaped for safe output)
 function printSocialLink($link_url, $icon_class, $link_name)
 {
   if ($link_url && $icon_class && $link_name) {
-    return '<li><a rel="external" href="' . $link_url . '"><i aria-hidden="true" class="' . $icon_class . '"></i> <span>' . $link_name . '</span></a></li>';
+    return '<li><a rel="noopener noreferrer" href="' . esc_url($link_url) . '"><i aria-hidden="true" class="' . esc_attr($icon_class) . '"></i> <span>' . esc_html($link_name) . '</span></a></li>';
   }
+  return '';
 }
 
 /**
