@@ -9,7 +9,11 @@
 			<span class="sep"> | </span>
 				<?php
 				/* translators: 1: Theme name, 2: Theme author. */
-				printf( esc_html__( 'Theme: %1$s by %2$s.', '_s' ), 'Lean _s', '<a href="https://www.elicohenator.xyz">Eli Cohen</a>' );
+				printf(
+					esc_html__( 'Theme: %1$s by %2$s.', '_s' ),
+					esc_html( 'Lean _s' ),
+					wp_kses_post( '<a href="https://www.elicohenator.xyz">Eli Cohen</a>' )
+				);
 				?>
 		</div><!-- .site-info -->
 	</footer><!-- #colophon -->

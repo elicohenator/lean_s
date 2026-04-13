@@ -16,20 +16,20 @@
  *
  * @return void
  */
-function _s_woocommerce_setup() {
+function _s_woocommerce_setup(): void {
 	add_theme_support(
 		'woocommerce',
-		array(
+		[
 			'thumbnail_image_width' => 150,
 			'single_image_width'    => 300,
-			'product_grid'          => array(
+			'product_grid'          => [
 				'default_rows'    => 3,
 				'min_rows'        => 1,
 				'default_columns' => 4,
 				'min_columns'     => 1,
 				'max_columns'     => 6,
-			),
-		)
+			],
+		]
 	);
 	add_theme_support( 'wc-product-gallery-zoom' );
 	add_theme_support( 'wc-product-gallery-lightbox' );
@@ -42,8 +42,13 @@ add_action( 'after_setup_theme', '_s_woocommerce_setup' );
  *
  * @return void
  */
-function _s_woocommerce_scripts() {
-	wp_enqueue_style( '_s-woocommerce-style', get_template_directory_uri() . '/woocommerce.css', array(), filemtime( get_template_directory() . '/woocommerce.css' ) );
+function _s_woocommerce_scripts(): void {
+	$wc_css = get_template_directory() . '/woocommerce.css';
+	if ( ! file_exists( $wc_css ) ) {
+		return;
+	}
+
+	wp_enqueue_style( '_s-woocommerce-style', get_template_directory_uri() . '/woocommerce.css', [], filemtime( $wc_css ) );
 
 	$font_path   = WC()->plugin_url() . '/assets/fonts/';
 	$inline_font = '@font-face {
@@ -74,10 +79,10 @@ add_filter( 'woocommerce_enqueue_styles', '__return_empty_array' );
 /**
  * Add 'woocommerce-active' class to the body tag.
  *
- * @param  array $classes CSS classes applied to the body tag.
- * @return array $classes modified to include 'woocommerce-active' class.
+ * @param  array<int, string> $classes CSS classes applied to the body tag.
+ * @return array<int, string> Modified body classes.
  */
-function _s_woocommerce_active_body_class( $classes ) {
+function _s_woocommerce_active_body_class( array $classes ): array {
 	$classes[] = 'woocommerce-active';
 
 	return $classes;
@@ -87,18 +92,16 @@ add_filter( 'body_class', '_s_woocommerce_active_body_class' );
 /**
  * Related Products Args.
  *
- * @param array $args related products args.
- * @return array $args related products args.
+ * @param array<string, mixed> $args Related products args.
+ * @return array<string, mixed>
  */
-function _s_woocommerce_related_products_args( $args ) {
-	$defaults = array(
+function _s_woocommerce_related_products_args( array $args ): array {
+	$defaults = [
 		'posts_per_page' => 3,
 		'columns'        => 3,
-	);
+	];
 
-	$args = wp_parse_args( $defaults, $args );
-
-	return $args;
+	return wp_parse_args( $defaults, $args );
 }
 add_filter( 'woocommerce_output_related_products_args', '_s_woocommerce_related_products_args' );
 
@@ -116,7 +119,7 @@ if ( ! function_exists( '_s_woocommerce_wrapper_before' ) ) {
 	 *
 	 * @return void
 	 */
-	function _s_woocommerce_wrapper_before() {
+	function _s_woocommerce_wrapper_before(): void {
 		?>
 			<main id="content">
 		<?php
@@ -132,7 +135,7 @@ if ( ! function_exists( '_s_woocommerce_wrapper_after' ) ) {
 	 *
 	 * @return void
 	 */
-	function _s_woocommerce_wrapper_after() {
+	function _s_woocommerce_wrapper_after(): void {
 		?>
 			</main><!-- #main -->
 		<?php
@@ -158,13 +161,13 @@ if ( ! function_exists( '_s_woocommerce_cart_link_fragment' ) ) {
 	 *
 	 * Ensure cart contents update when products are added to the cart via AJAX.
 	 *
-	 * @param array $fragments Fragments to refresh via AJAX.
-	 * @return array Fragments to refresh via AJAX.
+	 * @param array<string, string> $fragments Fragments to refresh via AJAX.
+	 * @return array<string, string> Fragments to refresh via AJAX.
 	 */
-	function _s_woocommerce_cart_link_fragment( $fragments ) {
+	function _s_woocommerce_cart_link_fragment( array $fragments ): array {
 		ob_start();
 		_s_woocommerce_cart_link();
-		$fragments['a.cart-contents'] = ob_get_clean();
+		$fragments['a.cart-contents'] = (string) ob_get_clean();
 
 		return $fragments;
 	}
@@ -179,7 +182,7 @@ if ( ! function_exists( '_s_woocommerce_cart_link' ) ) {
 	 *
 	 * @return void
 	 */
-	function _s_woocommerce_cart_link() {
+	function _s_woocommerce_cart_link(): void {
 		?>
 		<a class="cart-contents" href="<?php echo esc_url( wc_get_cart_url() ); ?>" title="<?php esc_attr_e( 'View your shopping cart', '_s' ); ?>">
 			<?php
@@ -201,7 +204,7 @@ if ( ! function_exists( '_s_woocommerce_header_cart' ) ) {
 	 *
 	 * @return void
 	 */
-	function _s_woocommerce_header_cart() {
+	function _s_woocommerce_header_cart(): void {
 		if ( is_cart() ) {
 			$class = 'current-menu-item';
 		} else {
@@ -214,9 +217,9 @@ if ( ! function_exists( '_s_woocommerce_header_cart' ) ) {
 			</li>
 			<li>
 				<?php
-				$instance = array(
+				$instance = [
 					'title' => '',
-				);
+				];
 
 				the_widget( 'WC_Widget_Cart', $instance );
 				?>

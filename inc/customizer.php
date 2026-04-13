@@ -10,7 +10,7 @@
  *
  * @param WP_Customize_Manager $wp_customize Theme Customizer object.
  */
-function _s_customize_register( $wp_customize ) {
+function _s_customize_register( WP_Customize_Manager $wp_customize ): void {
 	$wp_customize->get_setting( 'blogname' )->transport         = 'postMessage';
 	$wp_customize->get_setting( 'blogdescription' )->transport  = 'postMessage';
 	$wp_customize->get_setting( 'header_textcolor' )->transport = 'postMessage';
@@ -18,17 +18,17 @@ function _s_customize_register( $wp_customize ) {
 	if ( isset( $wp_customize->selective_refresh ) ) {
 		$wp_customize->selective_refresh->add_partial(
 			'blogname',
-			array(
+			[
 				'selector'        => '.site-title a',
 				'render_callback' => '_s_customize_partial_blogname',
-			)
+			]
 		);
 		$wp_customize->selective_refresh->add_partial(
 			'blogdescription',
-			array(
+			[
 				'selector'        => '.site-description',
 				'render_callback' => '_s_customize_partial_blogdescription',
-			)
+			]
 		);
 	}
 }
@@ -39,8 +39,8 @@ add_action( 'customize_register', '_s_customize_register' );
  *
  * @return void
  */
-function _s_customize_partial_blogname() {
-	bloginfo( 'name' );
+function _s_customize_partial_blogname(): void {
+	echo esc_html( get_bloginfo( 'name' ) );
 }
 
 /**
@@ -48,14 +48,14 @@ function _s_customize_partial_blogname() {
  *
  * @return void
  */
-function _s_customize_partial_blogdescription() {
-	bloginfo( 'description' );
+function _s_customize_partial_blogdescription(): void {
+	echo esc_html( get_bloginfo( 'description', 'display' ) );
 }
 
 /**
  * Binds JS handlers to make Theme Customizer preview reload changes asynchronously.
  */
-function _s_customize_preview_js() {
-	wp_enqueue_script( '_s-customizer', get_template_directory_uri() . '/js/customizer.js', array( 'customize-preview' ), filemtime( get_template_directory() . '/js/customizer.js' ), true );
+function _s_customize_preview_js(): void {
+	wp_enqueue_script( '_s-customizer', get_template_directory_uri() . '/js/customizer.js', [ 'customize-preview' ], filemtime( get_template_directory() . '/js/customizer.js' ), true );
 }
 add_action( 'customize_preview_init', '_s_customize_preview_js' );
