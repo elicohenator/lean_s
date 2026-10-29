@@ -21,6 +21,49 @@ function _s_acf_op_init(): void
 }
 
 /**
+ * Temporary RTL fix for ACF True/False stylized switch.
+ *
+ * Upstream: https://github.com/AdvancedCustomFields/acf/pull/1039
+ * Remove once ACF ships the fix.
+ */
+if ( class_exists( 'ACF' ) ) {
+	add_action( 'acf/input/admin_enqueue_scripts', '_s_acf_true_false_rtl_fix' );
+}
+
+/**
+ * Inline CSS for RTL True/False switch when ACF input styles are present.
+ */
+function _s_acf_true_false_rtl_fix(): void {
+	if ( ! is_rtl() ) {
+		return;
+	}
+
+	if ( ! wp_style_is( 'acf-input', 'enqueued' ) && ! wp_style_is( 'acf-input', 'registered' ) ) {
+		return;
+	}
+
+	$css = <<<'CSS'
+html[dir="rtl"] .acf-switch span {
+	float: right;
+}
+html[dir="rtl"] .acf-switch .acf-switch-slider {
+	left: 50%;
+	right: 2px;
+}
+html[dir="rtl"] .acf-switch.-on .acf-switch-slider {
+	left: 2px;
+	right: 50%;
+}
+html[dir="rtl"] .acf-switch + span {
+	margin-left: 0;
+	margin-right: 6px;
+}
+CSS;
+
+	wp_add_inline_style( 'acf-input', $css );
+}
+
+/**
  * Links
  */
 
